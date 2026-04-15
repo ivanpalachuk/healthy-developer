@@ -6,8 +6,10 @@ export interface Config {
   waterIntervalMinutes: number
   walkIntervalMinutes: number
   dailyLiters: number
-  language: 'es' | 'en'
+  language: 'es' | 'en' | 'pt'
   enabled: boolean
+  trackWaterIntake: boolean   // whether to log actual ml consumed
+  glassSize: number           // ml per glass (default 250)
 }
 
 const DEFAULT_CONFIG: Config = {
@@ -16,6 +18,8 @@ const DEFAULT_CONFIG: Config = {
   dailyLiters: 2,
   language: 'es',
   enabled: true,
+  trackWaterIntake: false,
+  glassSize: 250,
 }
 
 export const CONFIG_DIR = path.join(os.homedir(), '.healthy-developer')

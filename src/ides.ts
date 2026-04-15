@@ -6,6 +6,7 @@ export interface IDE {
   name: string
   detect: () => boolean
   configure: (scriptsDir: string) => void
+  uninstall: () => void
 }
 
 const home = os.homedir()
@@ -33,6 +34,34 @@ function mcpConfigPath(): Record<string, string> {
     cursor:    path.join(appdata, 'Cursor/User/mcp.json'),
     windsurf:  path.join(home, '.codeium/windsurf/mcp_settings.json'),
   }
+}
+
+function removeMcpEntry(filePath: string, serverKey: string): void {
+  if (!fs.existsSync(filePath)) return
+  const raw = fs.readFileSync(filePath, 'utf8')
+  const config = JSON.parse(raw)
+  const key = filePath.includes('windsurf') ? 'mcpServers' : 'servers'
+  if (config[key]?.[serverKey]) {
+    delete config[key][serverKey]
+    fs.writeFileSync(filePath, JSON.stringify(config, null, 2))
+  }
+}
+
+function removeClaudeCodeHooks(): void {
+  const settingsPath = path.join(home, '.claude/settings.json')
+  if (!fs.existsSync(settingsPath)) return
+  const raw = fs.readFileSync(settingsPath, 'utf8')
+  const settings = JSON.parse(raw)
+  if (settings.hooks) {
+    for (const event of ['SessionStart', 'UserPromptSubmit']) {
+      if (Array.isArray(settings.hooks[event])) {
+        settings.hooks[event] = settings.hooks[event].filter((h: any) =>
+          !h.hooks?.some((hh: any) => hh.command?.includes('healthy-developer'))
+        )
+      }
+    }
+  }
+  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2))
 }
 
 function patchMcpJson(filePath: string, serverKey: string, serverEntry: object): void {
@@ -90,44 +119,53 @@ const mcpEntry = {
 
 const paths = mcpConfigPath()
 
+const zedPath = platform === 'darwin'
+  ? path.join(home, 'Library/Application Support/Zed/settings.json')
+  : path.join(home, '.config/zed/settings.json')
+
 export const IDES: IDE[] = [
   {
     name: 'Claude Code',
     detect: () => fs.existsSync(path.join(home, '.claude/settings.json')),
     configure: (scriptsDir) => patchClaudeCode(scriptsDir),
+    uninstall: () => removeClaudeCodeHooks(),
   },
   {
     name: 'VS Code',
     detect: () => fs.existsSync(paths.vscode),
     configure: () => patchMcpJson(paths.vscode, 'healthy-developer', mcpEntry),
+    uninstall: () => removeMcpEntry(paths.vscode, 'healthy-developer'),
   },
   {
     name: 'Cursor',
     detect: () => fs.existsSync(paths.cursor),
     configure: () => patchMcpJson(paths.cursor, 'healthy-developer', mcpEntry),
+    uninstall: () => removeMcpEntry(paths.cursor, 'healthy-developer'),
   },
   {
     name: 'Windsurf',
     detect: () => fs.existsSync(paths.windsurf),
     configure: () => patchMcpJson(paths.windsurf, 'healthy-developer', mcpEntry),
+    uninstall: () => removeMcpEntry(paths.windsurf, 'healthy-developer'),
   },
   {
     name: 'Zed',
-    detect: () => {
-      const zedPath = platform === 'darwin'
-        ? path.join(home, 'Library/Application Support/Zed/settings.json')
-        : path.join(home, '.config/zed/settings.json')
-      return fs.existsSync(zedPath)
-    },
+    detect: () => fs.existsSync(zedPath),
     configure: () => {
-      const zedPath = platform === 'darwin'
-        ? path.join(home, 'Library/Application Support/Zed/settings.json')
-        : path.join(home, '.config/zed/settings.json')
       const raw = fs.readFileSync(zedPath, 'utf8')
       const config = JSON.parse(raw)
       config.context_servers = config.context_servers ?? {}
       if (!config.context_servers['healthy-developer']) {
         config.context_servers['healthy-developer'] = { command: { path: 'npx', args: ['healthy-developer', 'serve'] } }
+        fs.writeFileSync(zedPath, JSON.stringify(config, null, 2))
+      }
+    },
+    uninstall: () => {
+      if (!fs.existsSync(zedPath)) return
+      const raw = fs.readFileSync(zedPath, 'utf8')
+      const config = JSON.parse(raw)
+      if (config.context_servers?.['healthy-developer']) {
+        delete config.context_servers['healthy-developer']
         fs.writeFileSync(zedPath, JSON.stringify(config, null, 2))
       }
     },
