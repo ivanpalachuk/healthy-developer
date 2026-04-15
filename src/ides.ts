@@ -52,6 +52,8 @@ function removeClaudeCodeHooks(): void {
   if (!fs.existsSync(settingsPath)) return
   const raw = fs.readFileSync(settingsPath, 'utf8')
   const settings = JSON.parse(raw)
+
+  // Remove hooks
   if (settings.hooks) {
     for (const event of ['SessionStart', 'UserPromptSubmit']) {
       if (Array.isArray(settings.hooks[event])) {
@@ -61,6 +63,12 @@ function removeClaudeCodeHooks(): void {
       }
     }
   }
+
+  // Remove MCP server
+  if (settings.mcpServers?.['healthy-developer']) {
+    delete settings.mcpServers['healthy-developer']
+  }
+
   fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2))
 }
 
@@ -107,6 +115,15 @@ function patchClaudeCode(scriptsDir: string): void {
     settings.hooks.UserPromptSubmit.push({
       hooks: [{ type: 'command', command: path.join(scriptsDir, 'user-prompt-submit.sh'), timeout: 2 }],
     })
+  }
+
+  // MCP server — gives Claude tools to respond (reset timers, check status, snooze)
+  settings.mcpServers = settings.mcpServers ?? {}
+  if (!settings.mcpServers['healthy-developer']) {
+    settings.mcpServers['healthy-developer'] = {
+      command: 'npx',
+      args: ['healthy-developer', 'serve'],
+    }
   }
 
   fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2))

@@ -1,6 +1,6 @@
 {
   "name": "healthy-developer",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Wellness reminders integrated into your AI agent workflow — water and walk breaks, natively in Claude Code and any MCP-compatible IDE",
   "type": "module",
   "license": "MIT",
