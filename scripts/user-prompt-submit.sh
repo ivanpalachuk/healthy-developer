@@ -49,6 +49,13 @@ fi
 # Only output if there's a reminder — stdout becomes additionalContext for Claude
 if [ -n "$REMINDER" ]; then
   printf "## healthy-developer — wellness reminder\n%b" "$REMINDER"
+  if [ "$LANGUAGE" = "es" ]; then
+    printf "Si el usuario responde que ya tomó agua o ya caminó, llamá al tool log_wellness con el tipo correspondiente para reiniciar el contador.\n"
+  elif [ "$LANGUAGE" = "pt" ]; then
+    printf "Se o usuário responder que já bebeu água ou já caminhou, chame o tool log_wellness com o tipo correspondente para reiniciar o contador.\n"
+  else
+    printf "If the user replies that they already drank water or already walked, call the log_wellness tool with the corresponding type to reset the timer.\n"
+  fi
 fi
 
 exit 0

@@ -97,5 +97,33 @@ server.tool(
   }
 )
 
+server.tool(
+  'log_wellness',
+  'Log that the user completed a wellness action (drank water or took a walk). Call this when the user confirms they did it. Resets the reminder timer for that action.',
+  {
+    type: z.enum(['water', 'walk']).describe('Which action the user completed'),
+  },
+  async ({ type }) => {
+    const lang = readConfig().language
+    if (type === 'water') {
+      markWaterReminder()
+      const msg = lang === 'es'
+        ? '💧 ¡Perfecto! Contador de agua reiniciado. El próximo recordatorio será en el intervalo configurado.'
+        : lang === 'pt'
+        ? '💧 Ótimo! Contador de água reiniciado.'
+        : '💧 Great! Water timer reset. Next reminder in the configured interval.'
+      return { content: [{ type: 'text', text: msg }] }
+    } else {
+      markWalkReminder()
+      const msg = lang === 'es'
+        ? '🚶 ¡Genial! Contador de caminata reiniciado.'
+        : lang === 'pt'
+        ? '🚶 Ótimo! Contador de caminhada reiniciado.'
+        : '🚶 Nice! Walk timer reset.'
+      return { content: [{ type: 'text', text: msg }] }
+    }
+  }
+)
+
 const transport = new StdioServerTransport()
 await server.connect(transport)
