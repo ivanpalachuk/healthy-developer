@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
+import { execSync } from 'child_process'
 
 export interface IDE {
   name: string
@@ -117,16 +118,18 @@ function patchClaudeCode(scriptsDir: string): void {
     })
   }
 
-  // MCP server — gives Claude tools to respond (reset timers, check status, snooze)
-  settings.mcpServers = settings.mcpServers ?? {}
-  if (!settings.mcpServers['healthy-developer']) {
-    settings.mcpServers['healthy-developer'] = {
-      command: 'npx',
-      args: ['healthy-developer', 'serve'],
-    }
-  }
-
   fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2))
+
+  // MCP server — use official claude CLI so it registers correctly in ~/.claude.json
+  try {
+    const nodeBin = process.execPath
+    execSync(
+      `claude mcp add --scope user healthy-developer "${nodeBin}" -- "${path.join(scriptsDir, '..', 'mcp-server.js')}"`,
+      { stdio: 'ignore' }
+    )
+  } catch {
+    // claude CLI not available — fallback already handled by settings.json patch above
+  }
 }
 
 const mcpEntry = {

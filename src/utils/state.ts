@@ -43,14 +43,12 @@ export function writeState(state: Partial<State>): void {
   fs.writeFileSync(STATE_FILE, JSON.stringify({ ...current, ...state }, null, 2))
 }
 
+// Called when reminder fires — only resets the timer, does NOT increment counter
 export function markWaterReminder(): void {
-  const state = readState()
-  writeState({
-    lastWaterReminder: Math.floor(Date.now() / 1000),
-    waterCountToday: state.waterCountToday + 1,
-  })
+  writeState({ lastWaterReminder: Math.floor(Date.now() / 1000) })
 }
 
+// Called when user confirms they drank water — increments counter and logs ml
 export function logWaterIntake(ml: number): void {
   const state = readState()
   writeState({
