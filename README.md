@@ -4,6 +4,16 @@ Wellness reminders integrated natively into your AI agent workflow.
 
 Instead of a separate app, **healthy-developer** works inside your existing conversations — Claude (or any MCP-compatible agent) reminds you to drink water or take a walk **between tasks**, naturally, without interrupting your flow.
 
+## Why this exists
+
+Every new AI tool today is obsessed with saving tokens. Fewer context calls, shorter prompts, leaner pipelines — and that's fine. Efficiency matters.
+
+But **healthy-developer** doesn't care about spending a few extra tokens. Because what's the point of optimizing your workflow if you're not taking care of the person running it?
+
+You can be the most productive developer in the room and still end the day dehydrated, with a stiff back and tired eyes. Productivity without health isn't sustainable — it's just a slow way to burn out.
+
+So yes, this tool costs a few tokens per session. It does it on purpose. Because being able to enjoy what you're building matters more than saving a fraction of a cent on your API bill.
+
 ## How it works
 
 You send a message → the agent checks if it's time for a wellness reminder → if yes, it mentions it briefly before answering your question.
