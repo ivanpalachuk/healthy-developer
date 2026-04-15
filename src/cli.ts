@@ -56,14 +56,16 @@ async function runInstall() {
       waterInterval: () =>
         p.text({ message: m.waterInterval, initialValue: '30',
           validate: (v) => (isNaN(Number(v)) || Number(v) < 1 ? m.invalidNumber : undefined) }),
-      dailyLiters: () =>
-        p.text({ message: m.dailyLiters, initialValue: '2',
-          validate: (v) => (isNaN(Number(v)) || Number(v) < 0.5 ? m.invalidNumber : undefined) }),
       walkInterval: () =>
         p.text({ message: m.walkInterval, initialValue: '60',
           validate: (v) => (isNaN(Number(v)) || Number(v) < 1 ? m.invalidNumber : undefined) }),
       trackWaterIntake: () =>
         p.confirm({ message: m.trackWaterIntakeQuestion, initialValue: false }),
+      dailyLiters: ({ results }) =>
+        results.trackWaterIntake
+          ? p.text({ message: m.dailyLiters, initialValue: '2',
+              validate: (v) => (isNaN(Number(v)) || Number(v) < 0.5 ? m.invalidNumber : undefined) })
+          : Promise.resolve('2'),
       glassSize: ({ results }) =>
         results.trackWaterIntake
           ? p.text({ message: m.glassSizeQuestion, initialValue: '250',
