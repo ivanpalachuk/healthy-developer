@@ -1,0 +1,31 @@
+{
+  "name": "healthy-developer",
+  "version": "0.1.0",
+  "description": "Wellness reminders integrated into your AI agent workflow — water and walk breaks, natively in Claude Code and any MCP-compatible IDE",
+  "type": "module",
+  "license": "MIT",
+  "keywords": ["developer", "wellness", "health", "mcp", "claude", "ai", "reminders"],
+  "bin": {
+    "healthy-developer": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx src/cli.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.9.1",
+    "@modelcontextprotocol/sdk": "^1.10.2",
+    "chalk": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.2",
+    "tsup": "^8.4.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  },
+  "files": [
+    "dist",
+    "scripts"
+  ]
+}
