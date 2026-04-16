@@ -50,6 +50,14 @@ async function runInstall() {
 
   const m = t(lang)
 
+  const validateTime = (v: string) =>
+    /^\d{2}:\d{2}$/.test(v) ? undefined : (m as any).invalidTime
+
+  const mealQuestion = (enabled: boolean, msgKey: string, def: string) =>
+    enabled
+      ? p.text({ message: (m as any)[msgKey], initialValue: def, validate: validateTime })
+      : Promise.resolve(def)
+
   // Step 2 — Wellness config
   const config = await p.group(
     {
@@ -59,6 +67,8 @@ async function runInstall() {
       walkInterval: () =>
         p.text({ message: m.walkInterval, initialValue: '60',
           validate: (v) => (isNaN(Number(v)) || Number(v) < 1 ? m.invalidNumber : undefined) }),
+
+      // Water tracking
       trackWaterIntake: () =>
         p.confirm({ message: m.trackWaterIntakeQuestion, initialValue: false }),
       dailyLiters: ({ results }) =>
@@ -71,6 +81,34 @@ async function runInstall() {
           ? p.text({ message: m.glassSizeQuestion, initialValue: '250',
               validate: (v) => (isNaN(Number(v)) || Number(v) < 50 ? m.invalidNumber : undefined) })
           : Promise.resolve('250'),
+
+      // Meal reminders
+      enableMealReminders: () =>
+        p.confirm({ message: (m as any).mealRemindersQuestion, initialValue: false }),
+
+      enableBreakfast: ({ results }) => results.enableMealReminders
+        ? p.confirm({ message: (m as any).enableBreakfastQuestion, initialValue: true })
+        : Promise.resolve(false),
+      breakfastStart: ({ results }) => mealQuestion(results.enableBreakfast as boolean, 'breakfastStartQuestion', '07:00'),
+      breakfastEnd:   ({ results }) => mealQuestion(results.enableBreakfast as boolean, 'breakfastEndQuestion',   '09:00'),
+
+      enableLunch: ({ results }) => results.enableMealReminders
+        ? p.confirm({ message: (m as any).enableLunchQuestion, initialValue: true })
+        : Promise.resolve(false),
+      lunchStart: ({ results }) => mealQuestion(results.enableLunch as boolean, 'lunchStartQuestion', '12:00'),
+      lunchEnd:   ({ results }) => mealQuestion(results.enableLunch as boolean, 'lunchEndQuestion',   '14:00'),
+
+      enableSnack: ({ results }) => results.enableMealReminders
+        ? p.confirm({ message: (m as any).enableSnackQuestion, initialValue: false })
+        : Promise.resolve(false),
+      snackStart: ({ results }) => mealQuestion(results.enableSnack as boolean, 'snackStartQuestion', '15:30'),
+      snackEnd:   ({ results }) => mealQuestion(results.enableSnack as boolean, 'snackEndQuestion',   '17:00'),
+
+      enableDinner: ({ results }) => results.enableMealReminders
+        ? p.confirm({ message: (m as any).enableDinnerQuestion, initialValue: true })
+        : Promise.resolve(false),
+      dinnerStart: ({ results }) => mealQuestion(results.enableDinner as boolean, 'dinnerStartQuestion', '19:00'),
+      dinnerEnd:   ({ results }) => mealQuestion(results.enableDinner as boolean, 'dinnerEndQuestion',   '21:00'),
     },
     { onCancel: () => { p.cancel(m.cancelledInstall); process.exit(0) } }
   )
@@ -88,6 +126,12 @@ async function runInstall() {
     enabled:              true,
     trackWaterIntake:     config.trackWaterIntake as boolean,
     glassSize:            Number(config.glassSize),
+    mealReminders: {
+      breakfast: { enabled: config.enableBreakfast as boolean, start: config.breakfastStart as string, end: config.breakfastEnd as string },
+      lunch:     { enabled: config.enableLunch     as boolean, start: config.lunchStart     as string, end: config.lunchEnd     as string },
+      snack:     { enabled: config.enableSnack     as boolean, start: config.snackStart     as string, end: config.snackEnd     as string },
+      dinner:    { enabled: config.enableDinner    as boolean, start: config.dinnerStart    as string, end: config.dinnerEnd    as string },
+    },
   })
 
   if (!fs.existsSync(STATE_FILE)) {
